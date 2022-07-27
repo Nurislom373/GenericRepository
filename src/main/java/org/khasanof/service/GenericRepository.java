@@ -62,7 +62,18 @@ public class GenericRepository<T, ID> {
         return null;
     }
 
-
+    public T save(T entity) {
+        try {
+            if (tableExist(persistenceClass.getSimpleName().toLowerCase(Locale.ROOT))) {
+                connection.createStatement().execute(insertQuery(entity));
+            } else {
+                createTable();
+            }
+        } catch (SQLException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     private Object get(ResultSet resultSet) throws SQLException {
         Gson gson = new Gson();
@@ -84,6 +95,47 @@ public class GenericRepository<T, ID> {
 
     private Field[] getFields() {
         return persistenceClass.getDeclaredFields();
+    }
+
+
+    private String insertQuery(T entity) throws IllegalAccessException {
+        StringBuilder query = new StringBuilder("insert into " + persistenceClass.getSimpleName() + " (");
+        Field[] fields = getFields();
+        int count = 0;
+        for (Field field : fields) {
+            count++;
+            if (field.getName().equals("id")) {
+                continue;
+            }
+            if ((Arrays.stream(fields).count() - count) == 0) {
+                query.append(field.getName() + ") values (");
+            } else {
+                query.append(field.getName() + ", ");
+            }
+        }
+        int secondCount = 0;
+        Field[] declaredFields = entity.getClass().getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            secondCount++;
+            if (declaredField.getName().equals("id")) {
+                continue;
+            }
+            if ((Arrays.stream(declaredFields).count() - secondCount) == 0) {
+                if (declaredField.getGenericType().getTypeName().contains("Integer")) {
+                    query.append(getValue(entity, declaredField) + ");");
+                } else {
+                    query.append("'" + getValue(entity, declaredField) + "');");
+                }
+            } else {
+                if (declaredField.getGenericType().getTypeName().contains("Integer")) {
+                    query.append(getValue(entity, declaredField) + ",");
+                } else {
+                    query.append("'" + getValue(entity, declaredField) + "',");
+                }
+            }
+        }
+        System.out.println(query);
+        return query.toString();
     }
 
     private void createTable() throws SQLException {
@@ -114,6 +166,11 @@ public class GenericRepository<T, ID> {
         } else {
             return "varchar";
         }
+    }
+
+    private Object getValue(T entity, Field field) throws IllegalAccessException {
+        field.setAccessible(true);
+        return field.get(entity);
     }
 
 
