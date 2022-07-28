@@ -9,3 +9,15 @@ db.username=test
 db.password=test
 db.jdbc=jdbc:postgresql://localhost:5432/test
 ```
+
+The main class we need is GenericRepository<T, ID>
+
+```Java
+public class GenericRepository<T, ID> {
+}
+```
+
+```Java
+public class AuthRepo extends GenericRepository<AuthUser, Integer> {
+}
+```
