@@ -1,14 +1,14 @@
 package org.khasanof.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.khasanof.config.ConnectionConfig;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,11 +17,13 @@ import java.util.Locale;
 public class GenericRepository<T, ID> {
     private final Connection connection = ConnectionConfig.getConnection();
     protected Class<T> persistenceClass;
-    private ObjectMapper objectMapper;
+    private final GenericUtils genericUtils;
+    private final ObjectMapper objectMapper;
 
     public GenericRepository() {
         this.persistenceClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.objectMapper = new ObjectMapper();
+        this.genericUtils = new GenericUtils();
     }
 
     public T find(ID id) {
@@ -30,9 +32,9 @@ public class GenericRepository<T, ID> {
                 PreparedStatement preparedStatement = connection.prepareStatement("select * from " + persistenceClass.getSimpleName() + " where id = " + id);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    Object o = get(resultSet);
+                    Object o = genericUtils.get(resultSet, getFields());
                     System.out.println("o = " + o);
-                    return new ObjectMapper().convertValue(o, persistenceClass);
+                    return objectMapper.convertValue(o, persistenceClass);
                 }
             } else {
                 createTable();
@@ -50,7 +52,7 @@ public class GenericRepository<T, ID> {
                 PreparedStatement preparedStatement = connection.prepareStatement("select * from " + persistenceClass.getSimpleName());
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    list.add(new ObjectMapper().convertValue(get(resultSet), persistenceClass));
+                    list.add(new ObjectMapper().convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
                 }
                 return list;
             } else {
@@ -68,6 +70,7 @@ public class GenericRepository<T, ID> {
                 connection.createStatement().execute(insertQuery(entity));
             } else {
                 createTable();
+                connection.createStatement().execute(insertQuery(entity));
             }
         } catch (SQLException | IllegalAccessException e) {
             e.printStackTrace();
@@ -75,23 +78,6 @@ public class GenericRepository<T, ID> {
         return null;
     }
 
-    private Object get(ResultSet resultSet) throws SQLException {
-        Gson gson = new Gson();
-        JsonObject jsonObject = new JsonObject();
-        Field[] fields = getFields();
-        for (Field field : fields) {
-            if (field.getGenericType().getTypeName().contains("String")) {
-                jsonObject.addProperty(field.getName(), resultSet.getString(field.getName()));
-            } else if (field.getGenericType().getTypeName().contains("Integer")) {
-                jsonObject.addProperty(field.getName(), resultSet.getInt(field.getName()));
-            } else if (field.getGenericType().getTypeName().contains("Long")) {
-                jsonObject.addProperty(field.getName(), resultSet.getLong(field.getName()));
-            } else if (field.getGenericType().getTypeName().contains("Double")) {
-                jsonObject.addProperty(field.getName(), resultSet.getDouble(field.getName()));
-            }
-        }
-        return gson.fromJson(jsonObject.toString(), Object.class);
-    }
 
     private Field[] getFields() {
         return persistenceClass.getDeclaredFields();
@@ -148,25 +134,14 @@ public class GenericRepository<T, ID> {
             if (field.getName().equals("id")) {
                 query.append("id serial primary key,");
             } else if ((fieldsCount - count) == 0) {
-                query.append(" " + field.getName() + " " + getTypeSQL(field.getGenericType()) + " );");
+                query.append(" " + field.getName() + " " + genericUtils.dataTypeConvertToSQl(field.getGenericType()) + " );");
             } else {
-                query.append(" " + field.getName() + " " + getTypeSQL(field.getGenericType()) + ",");
+                query.append(" " + field.getName() + " " + genericUtils.dataTypeConvertToSQl(field.getGenericType()) + ",");
             }
         }
         connection.createStatement().execute(query.toString());
     }
 
-    private String getTypeSQL(Type genericType) {
-        if (genericType.getTypeName().contains("Integer")) {
-            return "integer";
-        } else if (genericType.getTypeName().contains("Long")) {
-            return "bigint";
-        } else if (genericType.getTypeName().contains("Double")) {
-            return "float";
-        } else {
-            return "varchar";
-        }
-    }
 
     private Object getValue(T entity, Field field) throws IllegalAccessException {
         field.setAccessible(true);

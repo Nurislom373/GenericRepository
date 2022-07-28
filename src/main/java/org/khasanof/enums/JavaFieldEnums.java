@@ -5,12 +5,18 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum FieldEnums {
+public enum JavaFieldEnums {
     STRING("String"),
     INTEGER("Integer"),
     LONG("Long"),
     DOUBLE("Double"),
     DATE("Date"),
+    BYTE("Byte"),
+    TIMESTAMP("Timestamp"),
+    TIME("Time"),
+    SHORT("Short"),
+    BIG_DECIMAL("BigDecimal"),
+    BOOLEAN("Boolean"),
     LOCAL_DATE_TIME("LocalDateTime"),
     UUID("UUID"),
     FLOAT("Float");
