@@ -26,12 +26,10 @@ public class GenericRepository<T, ID> {
 
     public T getById(ID id) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from " + persistenceClass.getSimpleName() + " where id = " + id);
+            PreparedStatement preparedStatement = connection.prepareStatement(getByIdQuery(id));
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                Object o = genericUtils.get(resultSet, getFields());
-                System.out.println("o = " + o);
-                return objectMapper.convertValue(o, persistenceClass);
+                return objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -41,12 +39,10 @@ public class GenericRepository<T, ID> {
 
     public Optional<T> findById(ID id) {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from " + persistenceClass.getSimpleName() + " where id = " + id);
+            PreparedStatement preparedStatement = connection.prepareStatement(findByIdQuery(id));
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                Object o = genericUtils.get(resultSet, getFields());
-                System.out.println("o = " + o);
-                return Optional.of(objectMapper.convertValue(o, persistenceClass));
+                return Optional.of(objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,7 +53,7 @@ public class GenericRepository<T, ID> {
     public List<T> findAll() {
         try {
             List<T> list = new ArrayList<>();
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from " + persistenceClass.getSimpleName());
+            PreparedStatement preparedStatement = connection.prepareStatement(findAllQuery());
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 list.add(new ObjectMapper().convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
@@ -121,14 +117,38 @@ public class GenericRepository<T, ID> {
         }
     }
 
+    public long count() {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(countQuery());
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                return resultSet.getLong("count");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0L;
+    }
 
     private Field[] getFields() {
         return persistenceClass.getDeclaredFields();
     }
 
+    private String findAllQuery() {
+        return "select * from " + persistenceClass.getSimpleName();
+    }
+
+    private String getByIdQuery(ID id) {
+        return "select * from " + persistenceClass.getSimpleName() + " where id = " + id;
+    }
+
+    private String findByIdQuery(ID id) {
+        return "select * from " + persistenceClass.getSimpleName() + " where id = " + id;
+    }
+
     private String deleteByIdQuery(ID id) throws IllegalAccessException {
         StringBuilder query = new StringBuilder("delete from " + persistenceClass.getSimpleName() + " where id = ");
-        if (isNumber(id.getClass().getName())) {
+        if (BaseUtils.isNumber(id.getClass().getName())) {
             query.append(id);
         } else {
             query.append("'").append(id).append("'");
@@ -141,6 +161,10 @@ public class GenericRepository<T, ID> {
         return "truncate table " + persistenceClass.getSimpleName() + ";";
     }
 
+    private String countQuery() {
+        return "select count(*) from " + persistenceClass.getSimpleName() + ";";
+    }
+
     private String deleteQuery(T entity) throws IllegalAccessException {
         StringBuilder query = new StringBuilder("delete from " + persistenceClass.getSimpleName() + " where ");
         Field[] fields = entity.getClass().getDeclaredFields();
@@ -148,13 +172,13 @@ public class GenericRepository<T, ID> {
         for (Field field : fields) {
             count++;
             if ((Arrays.stream(fields).count() - count) == 0) {
-                if (isNumber(field.getGenericType().getTypeName())) {
+                if (BaseUtils.isNumber(field.getGenericType().getTypeName())) {
                     query.append(field.getName()).append(" = ").append(getValue(entity, field)).append(";");
                 } else {
                     query.append(field.getName()).append(" = '").append(getValue(entity, field)).append("';");
                 }
             } else {
-                if (isNumber(field.getGenericType().getTypeName())) {
+                if (BaseUtils.isNumber(field.getGenericType().getTypeName())) {
                     query.append(field.getName()).append(" = ").append(getValue(entity, field)).append(" and ");
                 } else {
                     query.append(field.getName()).append(" = '").append(getValue(entity, field)).append("' and ");
@@ -208,21 +232,6 @@ public class GenericRepository<T, ID> {
     private Object getValue(T entity, Field field) throws IllegalAccessException {
         field.setAccessible(true);
         return field.get(entity);
-    }
-
-    private boolean isNumber(String type) {
-        return type.contains("Integer")
-                || type.contains("Float")
-                || type.contains("BigDecimal")
-                || type.contains("Short")
-                || type.contains("Byte")
-                || type.contains("Double")
-                || type.equals("int")
-                || type.equals("byte")
-                || type.equals("short")
-                || type.equals("double")
-                || type.equals("lon")
-                || type.equals("float");
     }
 
 
