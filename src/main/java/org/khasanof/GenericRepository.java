@@ -60,7 +60,22 @@ public class GenericRepository<T, ID> {
             PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.findAllQuery(persistenceClass.getSimpleName()));
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                list.add(new ObjectMapper().convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
+                list.add(objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<T> findAll(DirectionRequest request) {
+        try {
+            List<T> list = new ArrayList<>();
+            PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.findAllDirectionQuery(request, persistenceClass.getSimpleName()));
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                list.add(objectMapper.convertValue(genericUtils.get(resultSet, persistenceClass.getDeclaredFields()), persistenceClass));
             }
             return list;
         } catch (SQLException e) {

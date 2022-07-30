@@ -1,9 +1,12 @@
 package org.khasanof.utils;
 
+import org.khasanof.DirectionRequest;
+
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class QueryUtils {
 
@@ -178,4 +181,18 @@ public class QueryUtils {
         return field.get(entity);
     }
 
+    public String findAllDirectionQuery(DirectionRequest request, String simpleName) {
+        StringBuilder query = new StringBuilder("select * from " + simpleName);
+        if (Objects.isNull(request.getSortKey())) {
+            query.append(" limit ")
+                    .append(request.getSize()).append(" offset ").append(request.getSize() * request.getPage());
+        } else {
+            query.append(" order by ").append(request.getSortValue())
+                    .append(" ").append(request.getSortKey())
+                    .append(" limit ").append(request.getSize())
+                    .append(" offset ").append(request.getSize() * request.getPage());
+        }
+        System.out.println("query = " + query);
+        return query.toString();
+    }
 }
