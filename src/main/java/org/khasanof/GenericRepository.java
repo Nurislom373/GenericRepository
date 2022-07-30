@@ -8,10 +8,7 @@ import org.khasanof.utils.QueryUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class GenericRepository<T, ID> {
@@ -75,7 +72,7 @@ public class GenericRepository<T, ID> {
     public void save(T entity) {
         BaseUtils.checkNotNullEntity(entity);
         try {
-            connection.createStatement().execute(queryUtils.insertQuery(entity, persistenceClass.getSimpleName()));
+            connection.createStatement().execute(saveOrUpdate(entity));
         } catch (SQLException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -85,7 +82,7 @@ public class GenericRepository<T, ID> {
         BaseUtils.checkNotNullList(tList);
         try {
             for (T entity : tList) {
-                connection.createStatement().execute(queryUtils.insertQuery(entity, persistenceClass.getSimpleName()));
+                connection.createStatement().execute(saveOrUpdate(entity));
             }
         } catch (SQLException | IllegalAccessException e) {
             e.printStackTrace();
@@ -147,8 +144,41 @@ public class GenericRepository<T, ID> {
         return 0L;
     }
 
+    private String saveOrUpdate(T entity) throws IllegalAccessException {
+        Field[] fields = entity.getClass().getDeclaredFields();
+        Object id = null;
+        String type = null;
+        for (Field field : fields) {
+            if (field.getName().equalsIgnoreCase("Id")) {
+                id = queryUtils.getValue(entity, field);
+                type = field.getGenericType().getTypeName();
+            }
+        }
+        System.out.println("id = " + id);
+        System.out.println("type = " + type);
+        if (Objects.isNull(id)) {
+            return queryUtils.insertQuery(entity, persistenceClass.getSimpleName());
+        } else {
+            if (objIsPresent(id, type)) {
+                return queryUtils.updateQuery(entity, persistenceClass.getSimpleName());
+            } else {
+                return queryUtils.insertQuery(entity, persistenceClass.getSimpleName());
+            }
+        }
+    }
+
     private Field[] getFields() {
         return persistenceClass.getDeclaredFields();
+    }
+
+    private boolean objIsPresent(Object id, String type) {
+        try {
+            ResultSet resultSet = connection.prepareStatement(queryUtils.objIsPresentQuery(id, type, persistenceClass.getSimpleName())).executeQuery();
+            return resultSet.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private void checkTable() {
@@ -162,12 +192,8 @@ public class GenericRepository<T, ID> {
     }
 
     private boolean tableExistQuery(String tableName) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("SELECT count(*) "
-                + "FROM information_schema.tables "
-                + "WHERE table_name = ?"
-                + "LIMIT 1;");
+        PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.tableExistQuery());
         preparedStatement.setString(1, tableName);
-
         ResultSet resultSet = preparedStatement.executeQuery();
         resultSet.next();
         return resultSet.getInt(1) != 0;

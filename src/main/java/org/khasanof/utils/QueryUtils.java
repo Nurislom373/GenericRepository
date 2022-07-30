@@ -3,6 +3,7 @@ package org.khasanof.utils;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 public class QueryUtils {
 
@@ -32,6 +33,10 @@ public class QueryUtils {
         return "select count(*) from " + className + ";";
     }
 
+    public String tableExistQuery() {
+        return "SELECT count(*) FROM information_schema.tables WHERE table_name = ? LIMIT 1;";
+    }
+
     public <ID> String deleteByIdQuery(ID id, String className) {
         StringBuilder query = new StringBuilder("delete from " + className + " where id = ");
         if (BaseUtils.isNumber(id.getClass().getName())) {
@@ -42,7 +47,7 @@ public class QueryUtils {
         return String.valueOf(query);
     }
 
-    public  <T> String deleteQuery(T entity, String className) throws IllegalAccessException {
+    public <T> String deleteQuery(T entity, String className) throws IllegalAccessException {
         StringBuilder query = new StringBuilder("delete from " + className + " where ");
         Field[] fields = entity.getClass().getDeclaredFields();
         int count = 0;
@@ -65,7 +70,43 @@ public class QueryUtils {
         return String.valueOf(query);
     }
 
-    public  <T> String insertQuery(T entity, String className) throws IllegalAccessException {
+    public <T> String updateQuery(T entity, String simpleName) throws IllegalAccessException {
+        StringBuilder query = new StringBuilder("update " + simpleName + " set ");
+        List<Field> fields = Arrays.stream(entity.getClass().getDeclaredFields()).toList();
+        int count = 0;
+        for (Field field : fields) {
+            count++;
+            if (field.getName().equalsIgnoreCase("id")) {
+                continue;
+            } else {
+                if ((count - fields.size()) == 0) {
+                    if (BaseUtils.isNumber(field.getGenericType().getTypeName())) {
+                        query.append(field.getName()).append(" = ").append(getValue(entity, field)).append(" ");
+                    } else {
+                        query.append(field.getName()).append(" = '").append(getValue(entity, field)).append("' ");
+                    }
+                } else {
+                    if (BaseUtils.isNumber(field.getGenericType().getTypeName())) {
+                        query.append(field.getName()).append(" = ").append(getValue(entity, field)).append(", ");
+                    } else {
+                        query.append(field.getName()).append(" = '").append(getValue(entity, field)).append("', ");
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < fields.size(); i++) {
+            if (fields.get(i).getName().equalsIgnoreCase("id")) {
+                if (BaseUtils.isNumber(fields.get(i).getGenericType().getTypeName()))
+                    query.append("where id = ").append(getValue(entity, fields.get(i))).append(";");
+                else
+                    query.append("where id = '").append(getValue(entity, fields.get(i))).append("';");
+            }
+        }
+        System.out.println(query);
+        return query.toString();
+    }
+
+    public <T> String insertQuery(T entity, String className) throws IllegalAccessException {
         StringBuilder query = new StringBuilder("insert into " + className + " (");
         Field[] fields = entity.getClass().getDeclaredFields();
         int count = 0;
@@ -104,6 +145,17 @@ public class QueryUtils {
         return query.toString();
     }
 
+    public String objIsPresentQuery(Object id, String type, String className) {
+        StringBuilder query = new StringBuilder("select * from " + className + " where id = ");
+        if (BaseUtils.isNumber(type)) {
+            query.append(id).append(";");
+        } else {
+            query.append("'").append(id).append("';");
+        }
+        System.out.println(query);
+        return query.toString();
+    }
+
     public String createTableQuery(Field[] fields, String className) throws SQLException {
         long fieldsCount = Arrays.stream(fields).count();
         int count = 0;
@@ -121,7 +173,7 @@ public class QueryUtils {
         return String.valueOf(query);
     }
 
-    private <T> Object getValue(T entity, Field field) throws IllegalAccessException {
+    public <T> Object getValue(T entity, Field field) throws IllegalAccessException {
         field.setAccessible(true);
         return field.get(entity);
     }
