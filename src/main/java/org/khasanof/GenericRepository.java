@@ -5,6 +5,7 @@ import org.khasanof.config.ConnectionConfig;
 import org.khasanof.utils.BaseUtils;
 import org.khasanof.utils.GenericUtils;
 import org.khasanof.utils.QueryUtils;
+import org.khasanof.utils.Sort;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -70,6 +71,21 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         return null;
     }
 
+    public List<T> findAll(Sort sort) {
+        try {
+            List<T> list = new ArrayList<>();
+            PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.findAllSortQuery(sort, persistenceClass.getSimpleName()));
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                list.add(objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public List<T> findAll(DirectionRequest request) {
         try {
             List<T> list = new ArrayList<>();
@@ -85,6 +101,15 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         return null;
     }
 
+    public List<T> findAllById(Iterable<ID> ids) {
+        BaseUtils.checkNotNullEntity(ids);
+        List<T> list = new ArrayList<>();
+        for (ID id : ids) {
+            list.add(getById(id));
+        }
+        return list;
+    }
+
     public void save(T entity) {
         BaseUtils.checkNotNullEntity(entity);
         try {
@@ -94,13 +119,33 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
-    public void save(List<T> tList) {
+    public void insert(T entity) {
+        BaseUtils.checkNotNullEntity(entity);
+        try {
+            connection.createStatement().execute(queryUtils.insertQuery(entity, persistenceClass.getSimpleName()));
+        } catch (SQLException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveAll(List<T> tList) {
         BaseUtils.checkNotNullList(tList);
         try {
             for (T entity : tList) {
                 connection.createStatement().execute(saveOrUpdate(entity));
             }
         } catch (SQLException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void insertAll(Iterable<T> entities) {
+        BaseUtils.checkNotNullEntity(entities);
+        try {
+            for (T next : entities) {
+                insert(next);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -134,6 +179,17 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
     public boolean existById(ID id) {
         BaseUtils.checkNotNullId(id);
         return findById(id).isPresent();
+    }
+
+    public void deleteAll(Iterable<? extends ID> ids) {
+        BaseUtils.checkNotNullId(ids);
+        try {
+            for (ID id : ids) {
+                deleteById(id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void deleteAll(List<T> tList) {

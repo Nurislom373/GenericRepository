@@ -182,15 +182,21 @@ public class QueryUtils {
 
     public String findAllDirectionQuery(DirectionRequest request, String simpleName) {
         StringBuilder query = new StringBuilder("select * from " + simpleName);
-        if (Objects.isNull(request.getSortKey())) {
+        if (Objects.isNull(request.getOrderKey())) {
             query.append(" limit ")
                     .append(request.getSize()).append(" offset ").append(request.getSize() * request.getPage());
         } else {
-            query.append(" order by ").append(request.getSortValue())
-                    .append(" ").append(request.getSortKey())
+            query.append(" order by ").append(request.getOrderValue())
+                    .append(" ").append(request.getOrderKey())
                     .append(" limit ").append(request.getSize())
                     .append(" offset ").append(request.getSize() * request.getPage());
         }
         return query.toString();
+    }
+
+    public String findAllSortQuery(Sort sort, String simpleName) {
+        return "select * from " + simpleName +
+                " order by " + sort.getProperty() +
+                " " + sort.getDirect();
     }
 }

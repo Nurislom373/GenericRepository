@@ -1,10 +1,10 @@
 package org.khasanof.enums;
 
-public enum Sort {
+public enum Order {
     ASC("ASC"),
     DESC("DESC");
 
-    Sort(String value) {
+    Order(String value) {
         this.value = value;
     }
 
