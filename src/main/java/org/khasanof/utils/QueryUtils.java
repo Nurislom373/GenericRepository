@@ -105,7 +105,6 @@ public class QueryUtils {
                     query.append("where id = '").append(getValue(entity, fields.get(i))).append("';");
             }
         }
-        System.out.println(query);
         return query.toString();
     }
 
@@ -155,13 +154,13 @@ public class QueryUtils {
         } else {
             query.append("'").append(id).append("';");
         }
-        System.out.println(query);
         return query.toString();
     }
 
     public String createTableQuery(Field[] fields, String className) throws SQLException {
         long fieldsCount = Arrays.stream(fields).count();
         int count = 0;
+        BaseUtils.classIdPresent(fields);
         StringBuilder query = new StringBuilder("create table " + className + " ( ");
         for (Field field : fields) {
             count++;
@@ -192,7 +191,6 @@ public class QueryUtils {
                     .append(" limit ").append(request.getSize())
                     .append(" offset ").append(request.getSize() * request.getPage());
         }
-        System.out.println("query = " + query);
         return query.toString();
     }
 }

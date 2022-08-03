@@ -6,19 +6,27 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum JavaFieldEnums {
+    BOOLEAN("Boolean"),
     STRING("String"),
-    INTEGER("Integer"),
-    LONG("Long"),
-    DOUBLE("Double"),
-    DATE("Date"),
-    BYTE("Byte"),
+    CHARACTER("Character"),
+    LOCAL_DATE("LocalDate"),
+    LOCAL_TIME("LocalTime"),
+    OFFSET_TIME("OffsetTime"),
+    LOCAL_DATE_TIME("LocalDateTime"),
     TIMESTAMP("Timestamp"),
     TIME("Time"),
+    BYTE("Byte"),
     SHORT("Short"),
+    INTEGER("Integer"),
+    LONG("Long"),
+    FLOAT("Float"),
+    DOUBLE("Double"),
+    DATE("Date"),
     BIG_DECIMAL("BigDecimal"),
-    BOOLEAN("Boolean"),
-    LOCAL_DATE_TIME("LocalDateTime"),
-    UUID("UUID"),
-    FLOAT("Float");
+    POINT("Point"),
+    CIRCLE("Circle"),
+    INTERVAL("Interval"),
+    BYTEA("Buffer"),
+    UUID("UUID");
     private final String value;
 }

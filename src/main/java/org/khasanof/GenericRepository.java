@@ -11,8 +11,8 @@ import java.lang.reflect.ParameterizedType;
 import java.sql.*;
 import java.util.*;
 
-public class GenericRepository<T, ID> {
-    private final Connection connection = ConnectionConfig.getConnection();
+public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
+    private final Connection connection = ConnectionConfig.getHikariConnection();
     protected Class<T> persistenceClass;
     private final GenericUtils genericUtils;
     private final QueryUtils queryUtils;
@@ -26,6 +26,7 @@ public class GenericRepository<T, ID> {
         checkTable();
     }
 
+    @Override
     public T getById(ID id) {
         BaseUtils.checkNotNullId(id);
         try {
