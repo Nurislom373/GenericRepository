@@ -220,14 +220,14 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         Field[] fields = entity.getClass().getDeclaredFields();
         Object id = null;
         String type = null;
+
         for (Field field : fields) {
             if (field.getName().equalsIgnoreCase("Id")) {
                 id = queryUtils.getValue(entity, field);
                 type = field.getGenericType().getTypeName();
             }
         }
-        System.out.println("id = " + id);
-        System.out.println("type = " + type);
+
         if (Objects.isNull(id)) {
             return queryUtils.insertQuery(entity, persistenceClass.getSimpleName());
         } else {

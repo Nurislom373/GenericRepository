@@ -2,13 +2,14 @@ package org.khasanof.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.khasanof.enums.FieldsEnum;
 import org.khasanof.enums.JavaFieldEnums;
-import org.khasanof.enums.SqlFieldEnums;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class GenericUtils {
 
@@ -41,7 +42,17 @@ public class GenericUtils {
             } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.SHORT.getValue())) {
                 jsonObject.addProperty(field.getName(), String.valueOf(resultSet.getShort(field.getName())));
             } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.LOCAL_DATE.getValue())) {
-                jsonObject.addProperty(field.getName(), String.valueOf(resultSet.getDate(field.getName())));
+                jsonObject.addProperty(field.getName(), String.valueOf(DateTimeFormatter.dateParseLocalDate(resultSet.getDate(field.getName()))));
+            } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.LOCAL_DATE_TIME.getValue())) {
+                jsonObject.addProperty(field.getName(), String.valueOf(DateTimeFormatter.timestampParseLocalDateTime(resultSet.getTimestamp(field.getName()))));
+            } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.LOCAL_TIME.getValue())) {
+                jsonObject.addProperty(field.getName(), String.valueOf(DateTimeFormatter.timeParseLocalTime(resultSet.getTime(field.getName()))));
+            } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.OFFSET_TIME.getValue())) {
+                jsonObject.addProperty(field.getName(), String.valueOf(DateTimeFormatter.timeParseOffsetTime(resultSet.getTime(field.getName()))));
+            } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.UUID.getValue())) {
+                jsonObject.addProperty(field.getName(), String.valueOf(UUID.fromString(resultSet.getString(field.getName()))));
+            } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.CHARACTER.getValue())) {
+                jsonObject.addProperty(field.getName(), String.valueOf(resultSet.getString(field.getName())));
             } else if (field.getGenericType().getTypeName().contains(JavaFieldEnums.TIME.getValue())) {
                 jsonObject.addProperty(field.getName(), String.valueOf(resultSet.getTime(field.getName())));
             }
@@ -51,31 +62,49 @@ public class GenericUtils {
 
     public String dataTypeConvertToSQl(Type genericType) {
         if (genericType.getTypeName().contains(JavaFieldEnums.STRING.getValue())) {
-            return SqlFieldEnums.VARCHAR.getValue();
+            return FieldsEnum.VARCHAR.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.INTEGER.getValue()) || genericType.getTypeName().equals("int")) {
-            return SqlFieldEnums.INTEGER.getValue();
+            return FieldsEnum.INT4.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.LONG.getValue()) || genericType.getTypeName().equals("long")) {
-            return SqlFieldEnums.BIGINT.getValue();
+            return FieldsEnum.INT8.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.DOUBLE.getValue()) || genericType.getTypeName().equals("double")) {
-            return SqlFieldEnums.NUMERIC.getValue();
+            return FieldsEnum.FLOAT8.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.BOOLEAN.getValue()) || genericType.getTypeName().equals("boolean")) {
-            return SqlFieldEnums.BOOLEAN.getValue();
+            return FieldsEnum.BOOLEAN.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.BIG_DECIMAL.getValue())) {
-            return SqlFieldEnums.NUMERIC.getValue();
+            return FieldsEnum.NUMERIC.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.SHORT.getValue()) || genericType.getTypeName().equals("short")) {
-            return SqlFieldEnums.SMALLINT.getValue();
-        } else if (genericType.getTypeName().contains(JavaFieldEnums.DATE.getValue())) {
-            return SqlFieldEnums.DATE.getValue();
+            return FieldsEnum.INT2.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.DATE.getValue()) && genericType.getTypeName().substring(10).equals("Date")) {
+            return FieldsEnum.DATE.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.FLOAT.getValue()) || genericType.getTypeName().equals("float")) {
-            return SqlFieldEnums.FLOAT.getValue();
-        } else if (genericType.getTypeName().contains(JavaFieldEnums.BYTE.getValue()) || genericType.getTypeName().equals("byte")) {
-            return SqlFieldEnums.SMALLINT.getValue();
+            return FieldsEnum.FLOAT4.getPostgres();
         } else if (genericType.getTypeName().contains(JavaFieldEnums.TIMESTAMP.getValue())) {
-            return SqlFieldEnums.TIMESTAMP.getValue();
-        } else if (genericType.getTypeName().contains(JavaFieldEnums.TIME.getValue())) {
-            return SqlFieldEnums.TIME.getValue();
+            return FieldsEnum.TIMESTAMP.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.UUID.getValue())) {
+            return FieldsEnum.UUID.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.LOCAL_DATE.getValue()) && (genericType.getTypeName().substring(10).equals("LocalDate"))) {
+            return FieldsEnum.DATE.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.TIMESTAMP.getValue())) {
+            return FieldsEnum.TIMESTAMP.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.LOCAL_TIME.getValue())) {
+            return FieldsEnum.TIMETZ.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.TIME.getValue()) && genericType.getTypeName().substring(10).equals("Time")) {
+            return FieldsEnum.TIME.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.OFFSET_TIME.getValue())) {
+            return FieldsEnum.TIMETZ.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.LOCAL_DATE_TIME.getValue())) {
+            return FieldsEnum.TIMESTAMP.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.BYTEA.getValue())) {
+            return FieldsEnum.BYTEA.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.INTERVAL.getValue())) {
+            return FieldsEnum.INTERVAL.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.CIRCLE.getValue())) {
+            return FieldsEnum.CIRCLE.getPostgres();
+        } else if (genericType.getTypeName().contains(JavaFieldEnums.POINT.getValue())) {
+            return FieldsEnum.POINT.getPostgres();
         } else {
-            return null;
+            return FieldsEnum.UNKNOWN.getPostgres();
         }
     }
 

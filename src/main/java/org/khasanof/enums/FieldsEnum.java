@@ -41,6 +41,13 @@ public enum FieldsEnum {
         this.postgres = postgres;
     }
 
+    public String getJava() {
+        return java;
+    }
+
+    public String getPostgres() {
+        return postgres;
+    }
     private final String java;
     private final String postgres;
 }

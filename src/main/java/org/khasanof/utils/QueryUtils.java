@@ -167,6 +167,7 @@ public class QueryUtils {
             if (field.getName().equals("id")) {
                 query.append("id serial primary key,");
             } else if ((fieldsCount - count) == 0) {
+                System.out.println("field = " + field.getGenericType().getTypeName());
                 query.append(" ").append(field.getName()).append(" ").append(genericUtils.dataTypeConvertToSQl(field.getGenericType())).append(" );");
             } else {
                 query.append(" ").append(field.getName()).append(" ").append(genericUtils.dataTypeConvertToSQl(field.getGenericType())).append(",");
