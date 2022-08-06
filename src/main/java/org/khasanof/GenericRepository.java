@@ -12,6 +12,14 @@ import java.lang.reflect.ParameterizedType;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * The GenericRepository Class is Difference method with Spring JpaRepository
+ *
+ * @param <T>  Database Table Class T
+ * @param <ID> Table Id Type
+ * @author Khasanov Nurislom
+ * @since 1.0
+ */
 public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
     private final Connection connection = ConnectionConfig.getHikariConnection();
     protected Class<T> persistenceClass;
@@ -27,16 +35,39 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         checkTable();
     }
 
-    @Override
     public T getById(ID id) {
         BaseUtils.checkNotNullId(id);
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.getByIdQuery(id, persistenceClass.getSimpleName()));
             ResultSet resultSet = preparedStatement.executeQuery();
+            Class<?> aClass = Class.forName(persistenceClass.getName());
+            while (resultSet.next()) {
+                return (T) genericUtils.get(resultSet, aClass.newInstance());
+            }
+        } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * This removed next version
+     * Test method
+     *
+     * @param id
+     * @return
+     */
+    @Deprecated
+    public T getByIdOlVersion(ID id) {
+        BaseUtils.checkNotNullId(id);
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.getByIdQuery(id, persistenceClass.getSimpleName()));
+            ResultSet resultSet = preparedStatement.executeQuery();
+            Class<?> aClass = Class.forName(persistenceClass.getName());
             while (resultSet.next()) {
                 return objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass);
             }
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;
@@ -47,10 +78,11 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.findByIdQuery(id, persistenceClass.getSimpleName()));
             ResultSet resultSet = preparedStatement.executeQuery();
+            Class<?> aClass = Class.forName(persistenceClass.getName());
             while (resultSet.next()) {
-                return Optional.of(objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
+                return Optional.of((T) genericUtils.get(resultSet, aClass.newInstance()));
             }
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return Optional.empty();
@@ -61,11 +93,12 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
             List<T> list = new ArrayList<>();
             PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.findAllQuery(persistenceClass.getSimpleName()));
             ResultSet resultSet = preparedStatement.executeQuery();
+            Class<?> aClass = Class.forName(persistenceClass.getName());
             while (resultSet.next()) {
-                list.add(objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
+                list.add((T) genericUtils.get(resultSet, aClass.newInstance()));
             }
             return list;
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -76,11 +109,12 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
             List<T> list = new ArrayList<>();
             PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.findAllSortQuery(sort, persistenceClass.getSimpleName()));
             ResultSet resultSet = preparedStatement.executeQuery();
+            Class<?> aClass = Class.forName(persistenceClass.getName());
             while (resultSet.next()) {
-                list.add(objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass));
+                list.add((T) genericUtils.get(resultSet, aClass.newInstance()));
             }
             return list;
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -91,11 +125,12 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
             List<T> list = new ArrayList<>();
             PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.findAllDirectionQuery(request, persistenceClass.getSimpleName()));
             ResultSet resultSet = preparedStatement.executeQuery();
+            Class<?> aClass = Class.forName(persistenceClass.getName());
             while (resultSet.next()) {
-                list.add(objectMapper.convertValue(genericUtils.get(resultSet, persistenceClass.getDeclaredFields()), persistenceClass));
+                list.add((T) genericUtils.get(resultSet, aClass.newInstance()));
             }
             return list;
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;

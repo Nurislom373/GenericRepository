@@ -9,10 +9,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class GenericUtils {
 
+    @Deprecated
     public Object get(ResultSet resultSet, Field[] fields) throws SQLException {
         Gson gson = new Gson();
         JsonObject jsonObject = new JsonObject();
@@ -58,6 +64,56 @@ public class GenericUtils {
             }
         }
         return gson.fromJson(jsonObject.toString(), Object.class);
+    }
+
+    public Object get(ResultSet resultSet, Object o) throws SQLException, IllegalAccessException {
+        Field[] declaredFields = o.getClass().getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            declaredField.setAccessible(true);
+            String typeName = declaredField.getGenericType().getTypeName();
+            String name = declaredField.getName();
+            declaredField.set(o, get(resultSet, typeName, name));
+        }
+        return o;
+    }
+
+    private Object get(ResultSet resultSet, String fieldType, String fieldName) throws SQLException {
+        if (fieldType.contains(JavaFieldEnums.STRING.getValue())) {
+            return resultSet.getString(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.INTEGER.getValue()) || fieldType.equals("int")) {
+            return resultSet.getInt(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.LONG.getValue()) || fieldType.equals("long")) {
+            return resultSet.getLong(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.DOUBLE.getValue()) || fieldType.equals("double")) {
+            return resultSet.getDouble(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.BOOLEAN.getValue()) || fieldType.equals("boolean")) {
+            return resultSet.getBoolean(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.BIG_DECIMAL.getValue())) {
+            return resultSet.getBigDecimal(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.SHORT.getValue()) || fieldType.equals("short")) {
+            return resultSet.getShort(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.DATE.getValue()) && fieldType.substring(10).equals("Date")) {
+            return resultSet.getDate(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.FLOAT.getValue()) || fieldType.equals("float")) {
+            return resultSet.getFloat(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.BYTE.getValue()) || fieldType.equals("byte")) {
+            return resultSet.getByte(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.TIMESTAMP.getValue())) {
+            return resultSet.getTime(fieldName);
+        } else if (fieldType.contains(JavaFieldEnums.LOCAL_DATE.getValue()) && (fieldType.substring(10).equals("LocalDate"))) {
+            return DateTimeFormatter.dateParseLocalDate(resultSet.getDate(fieldName));
+        } else if (fieldType.contains(JavaFieldEnums.LOCAL_DATE_TIME.getValue())) {
+            return DateTimeFormatter.timestampParseLocalDateTime(resultSet.getTimestamp(fieldName));
+        } else if (fieldType.contains(JavaFieldEnums.LOCAL_TIME.getValue())) {
+            return DateTimeFormatter.timeParseLocalTime(resultSet.getTime(fieldName));
+        } else if (fieldType.contains(JavaFieldEnums.OFFSET_TIME.getValue())) {
+            return DateTimeFormatter.timeParseOffsetTime(resultSet.getTime(fieldName));
+        } else if (fieldType.contains(JavaFieldEnums.UUID.getValue())) {
+            return UUID.fromString(resultSet.getString(fieldName));
+        } else if (fieldType.contains(JavaFieldEnums.TIME.getValue()) && fieldType.substring(9).equals("Time")) {
+            return resultSet.getTime(fieldName);
+        }
+        return resultSet.getObject(fieldName);
     }
 
     public String dataTypeConvertToSQl(Type genericType) {
