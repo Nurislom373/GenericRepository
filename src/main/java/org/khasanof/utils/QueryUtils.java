@@ -200,4 +200,18 @@ public class QueryUtils {
                 " order by " + sort.getProperty() +
                 " " + sort.getDirect();
     }
+
+    public String alterTableAddQuery() {
+        return "ALTER TABLE %s ADD COLUMN %s %s";
+    }
+
+    public String alterTableDropQuery() {
+        return "ALTER TABLE %s DROP COLUMN %s";
+    }
+
+    public String selectTableColumns() {
+        return "SELECT column_name, udt_name\n" +
+                "FROM information_schema.columns\n" +
+                "WHERE table_name = ?";
+    }
 }

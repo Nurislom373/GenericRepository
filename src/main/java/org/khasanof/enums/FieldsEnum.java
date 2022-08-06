@@ -41,6 +41,15 @@ public enum FieldsEnum {
         this.postgres = postgres;
     }
 
+    public static FieldsEnum haveToPostgres(String postgres) {
+        for (FieldsEnum value : values()) {
+            if (value.getPostgres().equalsIgnoreCase(postgres)) {
+                return value;
+            }
+        }
+        return UNKNOWN;
+    }
+
     public String getJava() {
         return java;
     }
@@ -48,6 +57,7 @@ public enum FieldsEnum {
     public String getPostgres() {
         return postgres;
     }
+
     private final String java;
     private final String postgres;
 }

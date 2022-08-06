@@ -14,9 +14,13 @@ import java.util.*;
 
 /**
  * The GenericRepository Class is Difference method with Spring JpaRepository
+ * The difference with JpaRepository is that GenericRepository doesn't need
+ * to be a spring project in order to use it. That is, it can be easily used
+ * in simple build tools like Maven or Gradle without spring. Very easy to use
+ * and lightweight.
  *
- * @param <T>  Database Table Class T
- * @param <ID> Table Id Type
+ * @param <T> Table class
+ * @param <ID> Table id
  * @author Khasanov Nurislom
  * @since 1.0
  */
@@ -27,6 +31,15 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
     private final QueryUtils queryUtils;
     private final ObjectMapper objectMapper;
 
+    /**
+     *
+     * This is one of the main points of GenericRepository.
+     * The reason is that when GenericRepository starts, many processes take place,
+     * for example, it checks whether the table exists in the database, if the
+     * table exists, it is checked internally, if not, then the table is created
+     * in the database. after that you can use GenericRepository without any difficulty.
+     *
+     */
     public GenericRepository() {
         this.persistenceClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.objectMapper = new ObjectMapper();
@@ -292,10 +305,67 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         try {
             if (!tableExistQuery(persistenceClass.getSimpleName().toLowerCase(Locale.ROOT))) {
                 connection.createStatement().execute(queryUtils.createTableQuery(getFields(), persistenceClass.getSimpleName()));
+            } else {
+                fieldsCheckTable();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private void fieldsCheckTable() throws SQLException {
+        Map<String, String> mapNameType = new HashMap<>();
+        List<Field> newFields = new ArrayList<>();
+        PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.selectTableColumns());
+        preparedStatement.setString(1, persistenceClass.getSimpleName().toLowerCase(Locale.ROOT));
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        while (resultSet.next()) {
+            mapNameType.put(resultSet.getString(1), resultSet.getString(2));
+        }
+
+        Field[] declaredFields = persistenceClass.getDeclaredFields();
+        long count = Arrays.stream(declaredFields).count();
+
+        if ((int) count > mapNameType.size()) {
+            for (Field declaredField : declaredFields) {
+                if (!mapNameType.containsKey(declaredField.getName())) {
+                    newFields.add(declaredField);
+                }
+            }
+
+            if (!newFields.isEmpty()) {
+                for (Field newField : newFields) {
+                    String alterQuery = getAlterQuery(newField, persistenceClass.getSimpleName());
+                    connection.createStatement().execute(alterQuery);
+                }
+            }
+        } else if ((int) count < mapNameType.size()) {
+            for (Field declaredField : declaredFields) {
+                for (Map.Entry<String, String> stringStringEntry : mapNameType.entrySet()) {
+                    if (declaredField.getName().equals(stringStringEntry.getKey())) {
+                        mapNameType.remove(stringStringEntry.getKey());
+                    }
+                }
+            }
+
+            if (!mapNameType.isEmpty()) {
+                for (Map.Entry<String, String> stringStringEntry : mapNameType.entrySet()) {
+                    String alterQuery = getAlterQuery(stringStringEntry.getKey(), persistenceClass.getSimpleName());
+                    connection.createStatement().execute(alterQuery);
+                }
+            }
+        }
+    }
+
+    private String getAlterQuery(String name, String className) {
+        String s = queryUtils.alterTableDropQuery();
+        return s.formatted(className, name);
+    }
+
+    private String getAlterQuery(Field field, String className) {
+        String s = queryUtils.alterTableAddQuery();
+        return s.formatted(className, field.getName(), genericUtils.dataTypeConvertToSQl(field.getGenericType()));
     }
 
     private boolean tableExistQuery(String tableName) throws SQLException {
