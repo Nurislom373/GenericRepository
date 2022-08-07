@@ -1,6 +1,5 @@
 package org.khasanof;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.khasanof.config.ConnectionConfig;
 import org.khasanof.utils.BaseUtils;
 import org.khasanof.utils.GenericUtils;
@@ -29,7 +28,6 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
     protected Class<T> persistenceClass;
     private final GenericUtils genericUtils;
     private final QueryUtils queryUtils;
-    private final ObjectMapper objectMapper;
 
     /**
      *
@@ -42,7 +40,6 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
      */
     public GenericRepository() {
         this.persistenceClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        this.objectMapper = new ObjectMapper();
         this.genericUtils = new GenericUtils();
         this.queryUtils = new QueryUtils();
         checkTable();
@@ -58,29 +55,6 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
                 return (T) genericUtils.get(resultSet, aClass.newInstance());
             }
         } catch (SQLException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * This removed next version
-     * Test method
-     *
-     * @param id
-     * @return
-     */
-    @Deprecated
-    public T getByIdOlVersion(ID id) {
-        BaseUtils.checkNotNullId(id);
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(queryUtils.getByIdQuery(id, persistenceClass.getSimpleName()));
-            ResultSet resultSet = preparedStatement.executeQuery();
-            Class<?> aClass = Class.forName(persistenceClass.getName());
-            while (resultSet.next()) {
-                return objectMapper.convertValue(genericUtils.get(resultSet, getFields()), persistenceClass);
-            }
-        } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;

@@ -1,10 +1,5 @@
 package org.khasanof.enums;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
-@Getter
-@RequiredArgsConstructor
 public enum JavaFieldEnums {
     BOOLEAN("Boolean"),
     STRING("String"),
@@ -29,4 +24,12 @@ public enum JavaFieldEnums {
     BYTEA("Buffer"),
     UUID("UUID");
     private final String value;
+
+    JavaFieldEnums(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }
