@@ -13,13 +13,13 @@ public class Sort {
     }
 
     public static Sort of(String property) {
-        Asserts.notNull(property, "property must not be null!");
+        BaseUtils.notNull(property, "property must not be null!");
         return new Sort(property, DEFAULT_ORDER);
     }
 
     public static Sort of(String property, Order order) {
-        Asserts.notNull(property, "property must not be null!");
-        Asserts.notNull(order, "order must not be null!");
+        BaseUtils.notNull(property, "property must not be null!");
+        BaseUtils.notNull(order, "order must not be null!");
         return new Sort(property, order.getValue());
     }
 

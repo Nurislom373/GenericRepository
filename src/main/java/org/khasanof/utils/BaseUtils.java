@@ -6,7 +6,12 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Objects;
 
-public class BaseUtils {
+public abstract class BaseUtils {
+    public static void notNull(Object o, String message) {
+        if (o == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
 
     public static <T> void checkNotNullEntity(T entity) {
         if (Objects.isNull(entity)) {
