@@ -40,6 +40,24 @@ public abstract class BaseUtils {
         throw new IdNotFoundException("Class id field not found");
     }
 
+    public static void isNullString(String str, String message) {
+        if (str.isEmpty() || str.equals(" ")) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    public static boolean isNullString(String str) {
+        return str == null || str.equals(" ");
+    }
+
+    public static boolean nonNullString(String str) {
+        return str != null && str.length() >= 2;
+    }
+
+    public static boolean checkTwoStringValue(String var1, String var2) {
+        return isNullString(var1) && isNullString(var2);
+    }
+
     public static boolean isNumber(String type) {
         return type.contains("Integer")
                 || type.contains("Float")

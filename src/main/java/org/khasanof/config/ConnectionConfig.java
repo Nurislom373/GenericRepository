@@ -36,6 +36,26 @@ public class ConnectionConfig {
         }
     }
 
+    public static Connection getConnection(String schema) {
+        String genericJdbc = "jdbc:postgresql://".concat(genericHost)
+                .concat("/")
+                .concat(genericDatabase)
+                .concat("?currentSchema=")
+                .concat(schema);
+        config.setJdbcUrl(genericJdbc);
+        config.setUsername(genericUsername);
+        config.setPassword(genericPassword);
+        config.addDataSourceProperty("cachePrepsStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        dataSource = new HikariDataSource(config);
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Deprecated
     public static Connection getConnection() {
         try {

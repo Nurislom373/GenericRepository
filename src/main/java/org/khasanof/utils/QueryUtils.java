@@ -214,4 +214,8 @@ public class QueryUtils {
                 "FROM information_schema.columns\n" +
                 "WHERE table_name = ?";
     }
+
+    public String containQuery() {
+        return "select * from %s where %s = ?;";
+    }
 }

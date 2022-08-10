@@ -5,11 +5,23 @@ import org.khasanof.enums.JavaFieldEnums;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class GenericUtils {
+
+    public Map<String, String> getColumnsAndTypes(ResultSet resultSet) throws SQLException {
+        Map<String, String> columnsAndTypes = new HashMap<>();
+        while (resultSet.next()) {
+            columnsAndTypes.put(resultSet.getString(1), resultSet.getString(2));
+        }
+        return columnsAndTypes;
+    }
 
     public Object get(ResultSet resultSet, Object o) throws SQLException, IllegalAccessException {
         Field[] declaredFields = o.getClass().getDeclaredFields();
@@ -20,6 +32,27 @@ public class GenericUtils {
             declaredField.set(o, get(resultSet, typeName, name));
         }
         return o;
+    }
+
+    public PreparedStatement setValueType(PreparedStatement preparedStatement, Class<?> aClass, Object value) throws SQLException {
+        if (aClass.equals(Integer.class)) {
+            preparedStatement.setInt(1, (int) value);
+        } else if (aClass.equals(Float.class)) {
+            preparedStatement.setFloat(1, (float) value);
+        } else if (aClass.equals(Boolean.class)) {
+            preparedStatement.setBoolean(1, (boolean) value);
+        } else if (aClass.equals(Double.class)) {
+            preparedStatement.setDouble(1, (double) value);
+        } else if (aClass.equals(BigDecimal.class)) {
+            preparedStatement.setBigDecimal(1, (BigDecimal) value);
+        } else if (aClass.equals(Long.class)) {
+            preparedStatement.setLong(1, (long) value);
+        } else if (aClass.equals(Short.class)) {
+            preparedStatement.setShort(1, (short) value);
+        } else {
+            preparedStatement.setString(1, (String) value);
+        }
+        return preparedStatement;
     }
 
     private Object get(ResultSet resultSet, String fieldType, String fieldName) throws SQLException {
