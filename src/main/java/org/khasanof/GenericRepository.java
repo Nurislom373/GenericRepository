@@ -85,7 +85,6 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
      * Return reference to the entity with given id. In a wrapped Optional.
      * If the entity is not found throw and {@link org.khasanof.exception.exceptions.EntityNotFoundException}
      *
-     *
      * @param id must be not null.
      * @return Return reference to the entity with given id. In a wrapped Optional
      * @since 1.0
@@ -167,6 +166,15 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         return null;
     }
 
+    /**
+     * Return all entities {@link DirectionRequest} specification by given options.
+     * can be {@link DirectionRequest#DirectionRequest()} constructor must not be null.
+     * If the entities will be null return empty list.
+     *
+     * @param request the {@link DirectionRequest} specification to sort the results.
+     * @return all entities sorted by given options
+     * @since 1.0
+     */
     public List<T> findAll(DirectionRequest request) {
         try {
             List<T> list = new ArrayList<>();
@@ -188,6 +196,14 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         return null;
     }
 
+    /**
+     * Returns a list of ids matching a list of ids.
+     * returns null if none of the ids are found.
+     *
+     * @param ids the {@link Iterable<ID>} ids
+     * @return a list of ids matching a list of ids.
+     * @since 1.0
+     */
     public List<T> findAllById(Iterable<ID> ids) {
         BaseUtils.checkNotNullEntity(ids);
         List<T> list = new ArrayList<>();
@@ -197,6 +213,18 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         return list;
     }
 
+    /**
+     * return void type.
+     * entity must be not null.
+     * An error occurs if entity is null.
+     * throws {@link RuntimeException} if entity is null
+     * The difference between the save and insert method is that if the given
+     * entity has an id and that id row is in the database, instead of adding a
+     * new row, it updates the old row.
+     *
+     * @param entity the {@link T} must be not null
+     * @since 1.0
+     */
     public void save(T entity) {
         BaseUtils.checkNotNullEntity(entity);
         try {
@@ -206,6 +234,14 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * this method return void type. {@link T} must be not null.
+     * insert method does not update entity with id like save method.
+     * Adds a new row even if there is an id.
+     *
+     * @param entity the {@link T} must be not null.
+     * @since 1.0
+     */
     public void insert(T entity) {
         BaseUtils.checkNotNullEntity(entity);
         try {
@@ -219,6 +255,14 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * Return type void is nothing.
+     * The saveAll method works the same as the save method
+     * except that it accepts a list of entities.
+     *
+     * @param tList A {@link List<T>}  list of entities will appear.
+     * @since 1.0
+     */
     public void saveAll(List<T> tList) {
         BaseUtils.checkNotNullList(tList);
         try {
@@ -230,6 +274,15 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * Return type void nothing
+     * iterable accepts entities that are short.
+     * The insertAll method is similar to the insert method
+     * except that it accepts entities that are iterable.
+     *
+     * @param entities {@link Iterable<T>} iterable accepts entities that are short.
+     * @since 1.0
+     */
     public void insertAll(Iterable<T> entities) {
         BaseUtils.checkNotNullEntity(entities);
         try {
@@ -241,6 +294,15 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * Return type void is nothing,
+     * the entity to be deleted enters.
+     * {@link T} must be not null.
+     *
+     * @param entity the {@link T} entity must be not null
+     * @since 1.0
+     *
+     */
     public void delete(T entity) {
         BaseUtils.checkNotNullEntity(entity);
         try {
@@ -254,6 +316,13 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * Return type void is nothing.
+     * The deleteById method deletes an entity by id.
+     *
+     * @param id the {@link ID} id must be not null.
+     * @since 1.0
+     */
     public void deleteById(ID id) {
         BaseUtils.checkNotNullId(id);
         try {
@@ -267,6 +336,12 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * Return type void is nothing.
+     * deletes all rows in the table.
+     *
+     * @since 1.0
+     */
     public void deleteAll() {
         try {
             if (schemaVal.equals(SchemaEnum.NO_ANNOTATION.getValue()) || schemaVal.equals(SchemaEnum.ONLY_SCHEMA.getValue())) {
@@ -279,11 +354,28 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * Return true if the given id is a row otherwise false.
+     *
+     * @param id {@link ID} must be not null
+     * @return true if the given id is a row otherwise false
+     * @since 1.0
+     */
     public boolean existById(ID id) {
         BaseUtils.checkNotNullId(id);
         return findById(id).isPresent();
     }
 
+    /**
+     * returns true if the given key has a corresponding table column and a corresponding value row.
+     * throws {@link IllegalArgumentException} if no matching column is found.
+     * returns false if value does not match.
+     *
+     * @param key incoming key must not be null of {@link String} type
+     * @param value incoming value must not be null of {@link String} type
+     * @return true if the given key has a corresponding table column and a corresponding value row.
+     * @since 1.1
+     */
     public boolean contain(String key, String value) {
         try {
             BaseUtils.notNull(key, "key required is not null!");
@@ -296,6 +388,16 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * returns true if the given key has a corresponding table column and a corresponding value row.
+     * throws {@link IllegalArgumentException} if no matching column is found.
+     * returns false if value does not match.
+     *
+     * @param key incoming key must not be null of {@link String} type
+     * @param value incoming value must not be null of {@link Integer} type
+     * @return true if the given key has a corresponding table column and a corresponding value row.
+     * @since 1.1
+     */
     public boolean contain(String key, Integer value) {
         try {
             BaseUtils.notNull(key, "key required is not null!");
@@ -308,6 +410,16 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * returns true if the given key has a corresponding table column and a corresponding value row.
+     * throws {@link IllegalArgumentException} if no matching column is found.
+     * returns false if value does not match.
+     *
+     * @param key incoming key must not be null of {@link String} type
+     * @param value incoming value must not be null of {@link Boolean} type
+     * @return true if the given key has a corresponding table column and a corresponding value row.
+     * @since 1.1
+     */
     public boolean contain(String key, Boolean value) {
         try {
             BaseUtils.notNull(key, "key required is not null!");
@@ -320,6 +432,85 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * An array of ids to be deleted will come in.
+     * throws a {@link RuntimeException} if the given array is null.
+     *
+     * @param ids an array of ids to be deleted will come in.
+     * @since 1.0
+     */
+    public void deleteAll(Iterable<? extends ID> ids) {
+        BaseUtils.checkNotNullId(ids);
+        try {
+            for (ID id : ids) {
+                deleteById(id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * List of ids to be deleted will come in.
+     * throws a {@link RuntimeException} if the given array is null.
+     *
+     * @param tList list of ids to be deleted will come in.
+     * @since 1.0
+     */
+    public void deleteAll(List<T> tList) {
+        BaseUtils.checkNotNullList(tList);
+        try {
+            for (T entity : tList) {
+                if (schemaVal.equals(SchemaEnum.NO_ANNOTATION.getValue()) || schemaVal.equals(SchemaEnum.ONLY_SCHEMA.getValue())) {
+                    connection.createStatement().execute(queryUtils.deleteQuery(entity, persistenceClass.getSimpleName()));
+                } else {
+                    connection.createStatement().execute(queryUtils.deleteQuery(entity, schemaCore.getNameValue()));
+                }
+            }
+        } catch (SQLException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Returns count the number of rows in the table.
+     * returns zero if the query fails
+     *
+     * @return count returns the number of rows in the table
+     * @since 1.0
+     */
+    public long count() {
+        try {
+            PreparedStatement preparedStatement;
+            if (schemaVal.equals(SchemaEnum.NO_ANNOTATION.getValue()) || schemaVal.equals(SchemaEnum.ONLY_SCHEMA.getValue())) {
+                preparedStatement = connection.prepareStatement(queryUtils.countQuery(persistenceClass.getSimpleName()));
+            } else {
+                preparedStatement = connection.prepareStatement(queryUtils.countQuery(schemaCore.getNameValue()));
+            }
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                return resultSet.getLong("count");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0L;
+    }
+
+    /**
+     * The ResultSet interface returned.
+     * The ContainCore method is the basis of all contain methods,
+     * and all internal work is done through this method.
+     * It is checked whether there is a column corresponding to the table key or not in this method.
+     * And if it is not found through this method, IllegalArgumentException is thrown.
+     *
+     * @param key incoming key must not be null of {@link String} type
+     * @param value incoming value must not be null of {@link Object} type
+     * @param aClass Specifies the type of value for the {@link Class<?>} parameter.
+     * @return The ResultSet interface returned.
+     * @throws SQLException will be thrown if there are any errors in the executed query
+     * @since 1.0
+     */
     private ResultSet containCore(String key, Object value, Class<?> aClass) throws SQLException {
         if (contains(key)) {
             PreparedStatement preparedStatement;
@@ -340,51 +531,17 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
-
-    public void deleteAll(Iterable<? extends ID> ids) {
-        BaseUtils.checkNotNullId(ids);
-        try {
-            for (ID id : ids) {
-                deleteById(id);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void deleteAll(List<T> tList) {
-        BaseUtils.checkNotNullList(tList);
-        try {
-            for (T entity : tList) {
-                if (schemaVal.equals(SchemaEnum.NO_ANNOTATION.getValue()) || schemaVal.equals(SchemaEnum.ONLY_SCHEMA.getValue())) {
-                    connection.createStatement().execute(queryUtils.deleteQuery(entity, persistenceClass.getSimpleName()));
-                } else {
-                    connection.createStatement().execute(queryUtils.deleteQuery(entity, schemaCore.getNameValue()));
-                }
-            }
-        } catch (SQLException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public long count() {
-        try {
-            PreparedStatement preparedStatement;
-            if (schemaVal.equals(SchemaEnum.NO_ANNOTATION.getValue()) || schemaVal.equals(SchemaEnum.ONLY_SCHEMA.getValue())) {
-                preparedStatement = connection.prepareStatement(queryUtils.countQuery(persistenceClass.getSimpleName()));
-            } else {
-                preparedStatement = connection.prepareStatement(queryUtils.countQuery(schemaCore.getNameValue()));
-            }
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                return resultSet.getLong("count");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0L;
-    }
-
+    /**
+     * method returns the result as a String after execution.
+     * saveOrUpdate method save basis.
+     * All the logic that will be inside the Save method
+     * will be in this method and will be returned as a String
+     *
+     * @param entity the {@link T} entity must not be null.
+     * @return method returns the result as a String after execution.
+     * @throws IllegalAccessException if access to the entity field is not granted
+     * @since 1.0
+     */
     private String saveOrUpdate(T entity) throws IllegalAccessException {
         Field[] fields = entity.getClass().getDeclaredFields();
         Object id = null;
@@ -420,6 +577,16 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         }
     }
 
+    /**
+     * This method is used to check whether the persistence class
+     * has a column that matches the key. Returns true if found.
+     * Otherwise false is returned.
+     *
+     * @param key the column name of the table is entered. must not be null
+     * @return true if table column name is table.
+     * @throws SQLException throws an SQLException if there are any errors in the query.
+     * @since 1.0
+     */
     private boolean contains(String key) throws SQLException {
         PreparedStatement preparedStatement;
 
