@@ -15,6 +15,14 @@ import java.util.UUID;
 
 public class GenericUtils {
 
+    public String getNumberTypeConvertSerial(Type type) {
+        if (type.equals(Integer.class) || type.equals(int.class)) {
+            return FieldsEnum.SERIAL4.getPostgres();
+        } else {
+            return FieldsEnum.SERIAL8.getPostgres();
+        }
+    }
+
     public Map<String, String> getColumnsAndTypes(ResultSet resultSet) throws SQLException {
         Map<String, String> columnsAndTypes = new HashMap<>();
         while (resultSet.next()) {

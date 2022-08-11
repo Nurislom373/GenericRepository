@@ -11,6 +11,7 @@ import java.util.Objects;
 public class QueryUtils {
 
     private final GenericUtils genericUtils;
+    public static final String primaryKey = "primary key";
 
     public QueryUtils() {
         this.genericUtils = new GenericUtils();

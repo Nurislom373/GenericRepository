@@ -301,7 +301,6 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
      *
      * @param entity the {@link T} entity must be not null
      * @since 1.0
-     *
      */
     public void delete(T entity) {
         BaseUtils.checkNotNullEntity(entity);
@@ -371,7 +370,7 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
      * throws {@link IllegalArgumentException} if no matching column is found.
      * returns false if value does not match.
      *
-     * @param key incoming key must not be null of {@link String} type
+     * @param key   incoming key must not be null of {@link String} type
      * @param value incoming value must not be null of {@link String} type
      * @return true if the given key has a corresponding table column and a corresponding value row.
      * @since 1.1
@@ -393,7 +392,7 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
      * throws {@link IllegalArgumentException} if no matching column is found.
      * returns false if value does not match.
      *
-     * @param key incoming key must not be null of {@link String} type
+     * @param key   incoming key must not be null of {@link String} type
      * @param value incoming value must not be null of {@link Integer} type
      * @return true if the given key has a corresponding table column and a corresponding value row.
      * @since 1.1
@@ -415,7 +414,7 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
      * throws {@link IllegalArgumentException} if no matching column is found.
      * returns false if value does not match.
      *
-     * @param key incoming key must not be null of {@link String} type
+     * @param key   incoming key must not be null of {@link String} type
      * @param value incoming value must not be null of {@link Boolean} type
      * @return true if the given key has a corresponding table column and a corresponding value row.
      * @since 1.1
@@ -504,8 +503,8 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
      * It is checked whether there is a column corresponding to the table key or not in this method.
      * And if it is not found through this method, IllegalArgumentException is thrown.
      *
-     * @param key incoming key must not be null of {@link String} type
-     * @param value incoming value must not be null of {@link Object} type
+     * @param key    incoming key must not be null of {@link String} type
+     * @param value  incoming value must not be null of {@link Object} type
      * @param aClass Specifies the type of value for the {@link Class<?>} parameter.
      * @return The ResultSet interface returned.
      * @throws SQLException will be thrown if there are any errors in the executed query
@@ -603,10 +602,26 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         return columnsAndTypes.containsKey(key);
     }
 
+    /**
+     * Returns the fields of the persistence {@link Class<T>}.
+     *
+     * @return persistence class fields
+     * @since 1.0
+     */
     private Field[] getFields() {
         return persistenceClass.getDeclaredFields();
     }
 
+    /**
+     * Table checks whether there is a row with the given id, returns true if present.
+     * Otherwise false is returned. Used inside {{@link #saveOrUpdate(Object)}}
+     *
+     * @param id   the {@link Object} id must not be null.
+     * @param type the {@link String} type must not be null.
+     * @return table checks whether there is a row with the given id,
+     * returns true if present.
+     * @since 1.0
+     */
     private boolean objIsPresent(Object id, String type) {
         try {
             ResultSet resultSet = connection.prepareStatement(queryUtils.objIsPresentQuery(id, type, persistenceClass.getSimpleName())).executeQuery();
@@ -617,6 +632,12 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
         return false;
     }
 
+    /**
+     * this method is one of the methods that performs the most basic work,
+     * that is the method that works when the object is created and performs the necessary tasks.
+     *
+     * @since 1.0
+     */
     private void checkTable() {
         try {
             if (schemaVal.equals(SchemaEnum.NO_ANNOTATION.getValue()) || schemaVal.equals(SchemaEnum.ONLY_SCHEMA.getValue())) {
@@ -690,6 +711,16 @@ public class GenericRepository<T, ID> implements AsyncRepository<T, ID> {
 
     private String getAlterQuery(Field field, String className) {
         String s = queryUtils.alterTableAddQuery();
+        if (field.getName().equalsIgnoreCase("id")) {
+            if (BaseUtils.isNumber(field.getGenericType().getTypeName())) {
+                String convertSerial = genericUtils.getNumberTypeConvertSerial(field.getGenericType());
+                return s.formatted(className, field.getName(), convertSerial)
+                        .concat(" ").concat(queryUtils.primaryKey);
+            } else {
+                return s.formatted(className, field.getName(), genericUtils.dataTypeConvertToSQl(field.getGenericType()))
+                        .concat(" ").concat(queryUtils.primaryKey);
+            }
+        }
         return s.formatted(className, field.getName(), genericUtils.dataTypeConvertToSQl(field.getGenericType()));
     }
 
