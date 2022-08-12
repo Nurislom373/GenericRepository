@@ -22,3 +22,14 @@ public class GenericRepository<T, ID> {
 public class AuthRepo extends GenericRepository<AuthUser, Integer> {
 }
 ```
+
+## New Feature @Table Annotattion Usage
+
+```Java
+@Table(name = "auth_user", schema = "public")
+public class AuthUser {
+    private Integer id;
+    private String name;
+    private String password;
+}
+```
