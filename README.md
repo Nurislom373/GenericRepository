@@ -1,6 +1,9 @@
 # GenericDaos
-GenericDao is a class similar to JpaRepository
-the only difference is that we don't need a spring project to use GenericDao in our program. Configuration is very easy, all you need is a properties file.
+The GenericRepository Class is Difference method with Spring JpaRepository
+The difference with JpaRepository is that GenericRepository doesn't need
+to be a spring project in order to use it. That is, it can be easily used
+in simple build tools like Maven or Gradle without spring. Very easy to use
+and lightweight.
 
 We can add these 4 configurations to the application.properties file
 
