@@ -1,4 +1,4 @@
-# GenericDaos
+# GenericRepository
 The GenericRepository Class is Difference method with Spring JpaRepository
 The difference with JpaRepository is that GenericRepository doesn't need
 to be a spring project in order to use it. That is, it can be easily used
